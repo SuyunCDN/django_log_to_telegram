@@ -23,6 +23,7 @@ setup(
     install_requires=[
         "Django>1.9",
         "requests",
+        "python-telegram-bot",
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

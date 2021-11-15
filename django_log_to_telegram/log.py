@@ -1,9 +1,13 @@
 import io
 import logging
 import traceback
+import time
 
 import requests
 
+from .telegram import QueueBot
+from telegram import ParseMode
+from telegram.error import RetryAfter, TimedOut
 
 class TelegramFormatter(logging.Formatter):
     """
@@ -44,9 +48,13 @@ class TelegramFormatter(logging.Formatter):
 
         traceback.print_exception(ei[0], ei[1], tb, self.limit, sio)
         s = sio.getvalue()
+        print(s)
         sio.close()
         if s[-1:] == "\n":
             s = s[:-1]
+        
+        print("==================")
+        print(s)
         return s
 
 
@@ -94,9 +102,27 @@ class AdminTelegramHandler(logging.Handler):
             return {}
 
     def send_message(self, message):
-        message_url = '{bot_url}sendMessage'.format(
-            bot_url=self.bot_data.bot_url()
-        )
-        prepared_data = self.prepare_json_for_answer(message)
-        requests.post(message_url, json=prepared_data)
+        bot = QueueBot(token=self.bot_data.bot_token)
+        if not self.bot_data.chat_id:
+            self.bot_data.get_chat_id()
 
+        try:
+            bot.sendMessage(
+                chat_id=self.bot_data.chat_id,
+                text=message,
+                parse_mode=ParseMode.HTML
+            )
+        except RetryAfter as e:
+            time.sleep(e.retry_after)
+            bot.sendMessage(
+                chat_id=self.bot_data.chat_id,
+                text=message,
+                parse_mode=ParseMode.HTML
+            )
+        except TimedOut:
+            time.sleep(5)
+            bot.sendMessage(
+                chat_id=self.bot_data.chat_id,
+                text=message,
+                parse_mode=ParseMode.HTML
+            )
