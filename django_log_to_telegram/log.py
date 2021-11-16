@@ -48,13 +48,9 @@ class TelegramFormatter(logging.Formatter):
 
         traceback.print_exception(ei[0], ei[1], tb, self.limit, sio)
         s = sio.getvalue()
-        print(s)
         sio.close()
         if s[-1:] == "\n":
             s = s[:-1]
-        
-        print("==================")
-        print(s)
         return s
 
 
@@ -72,57 +68,36 @@ class AdminTelegramHandler(logging.Handler):
         elif 'bot_id' in kwargs:
             self.bot_token = kwargs['bot_id']
 
+        if 'chat_id' in kwargs:
+            self.chat_id = kwargs['chat_id']
+
         self.bot_data = None
 
         self.setFormatter(TelegramFormatter())
 
     def emit(self, record):
-        if not self.bot_data:
-            from django_log_to_telegram.models import BotData
-            self.bot_data, created = BotData.objects.get_or_create(
-                bot_token=self.bot_token
-            )
-
-            if created:
-                self.bot_data.get_chat_id()
         self.send_message(self.format(record))
 
-    def prepare_json_for_answer(self, data):
-        if not self.bot_data.chat_id:
-            self.bot_data.get_chat_id()
-        if self.bot_data.chat_id:
-            json_data = {
-                "chat_id": self.bot_data.chat_id,
-                "text": data,
-                "parse_mode": 'HTML',
-            }
-
-            return json_data
-        else:
-            return {}
-
     def send_message(self, message):
-        bot = QueueBot(token=self.bot_data.bot_token)
-        if not self.bot_data.chat_id:
-            self.bot_data.get_chat_id()
+        bot = QueueBot(token=self.bot_token)
 
         try:
             bot.sendMessage(
-                chat_id=self.bot_data.chat_id,
+                chat_id=self.chat_id,
                 text=message,
                 parse_mode=ParseMode.HTML
             )
         except RetryAfter as e:
             time.sleep(e.retry_after)
             bot.sendMessage(
-                chat_id=self.bot_data.chat_id,
+                chat_id=self.chat_id,
                 text=message,
                 parse_mode=ParseMode.HTML
             )
         except TimedOut:
             time.sleep(5)
             bot.sendMessage(
-                chat_id=self.bot_data.chat_id,
+                chat_id=self.chat_id,
                 text=message,
                 parse_mode=ParseMode.HTML
             )
