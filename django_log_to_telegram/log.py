@@ -26,17 +26,18 @@ class TelegramFormatter(logging.Formatter):
         username that generated the Exception
         """
         s = super().format(record)
-
-        s += "\n{attr}: {value}".format(
-            attr='USER',
-            value=record.request.user
-        )
-        for attr in self.meta_attrs:
-            if attr in record.request.META:
-                s += "\n{attr}: {value}".format(
-                    attr=attr,
-                    value=record.request.META[attr]
-                )
+        
+        if hasattr(record, 'request'):
+            s += "\n{attr}: {value}".format(
+                attr='USER',
+                value=record.request.user
+            )
+            for attr in self.meta_attrs:
+                if attr in record.request.META:
+                    s += "\n{attr}: {value}".format(
+                        attr=attr,
+                        value=record.request.META[attr]
+                    )
         return s
 
     def formatException(self, ei):
