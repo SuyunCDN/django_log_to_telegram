@@ -22,8 +22,8 @@ setup(
     author_email='luigi.mazari@cnr.it',
     install_requires=[
         "Django>1.9",
-        "requests>2.28.1",
-        "python-telegram-bot>13.13",
+        "requests>=2.28.1",
+        "python-telegram-bot>=13.13",
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
