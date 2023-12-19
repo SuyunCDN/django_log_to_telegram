@@ -2,12 +2,17 @@ import io
 import logging
 import traceback
 import time
-
+from packaging import version
 import requests
 
 from .telegram import QueueBot
-from telegram import ParseMode
 from telegram.error import RetryAfter, TimedOut
+
+if version.parse(telegram.__version__) < version.parse('20.0'):
+    from telegram import ParseMode
+else:
+    from telegram.constants import ParseMode
+
 
 class TelegramFormatter(logging.Formatter):
     """
