@@ -1,4 +1,4 @@
 import telegram
 
-class QueueBot(telegram.bot.Bot):
+class QueueBot(telegram.Bot):
     pass
